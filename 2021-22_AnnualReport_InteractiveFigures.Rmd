@@ -1,0 +1,160 @@
+---
+title: "HTML Figures"
+output: html_notebook
+---
+
+```{r}
+library(plotly)
+library(htmlwidgets)
+library(rjson)
+```
+
+NOTE: chunks must be run following the corresponding figure chunks in the Annual Report notebook -- data objects are defined and modified there.
+
+
+```{r}
+line_colours <- setNames(custom_colours[c(2, 4, 3)],
+                         c("Female", "Male", "Total"))
+# Figure 1
+
+(figure1 <- plot_ly(data = filter(rates, sex == "Total"),
+                    type = "scatter",
+                    mode = "lines",
+                    color = ~sex,
+                    colors = line_colours,
+                    x = ~year,
+                    y = ~round(`Death rate per 100,000 resident population`,2),
+                    #linetype = ~type,
+                    text = ~n,
+                    hovertemplate = paste0("Death rate: ", "%{y}\n",
+                                           "Number of deaths: ","%{text}"),
+                    line = list(width = 4)) %>% 
+  layout(xaxis = list(title = "Year",
+                      tickvals = list(2005,2007,2009,2011,2013,2015,2017,2019,2021),
+                      range = c(2004, 2022)),
+         yaxis = list(title = "Death rate per 100,000 \n resident population",
+                      range = c(16, 47)),
+         font = list(size = 14),
+         legend = list(x = 0.62, y = 0.935, bgcolor = "rgba(0, 0, 0, 0)")) %>% 
+  add_trace(data = filter(rates, sex == "Female"),
+            y = ~round(`Death rate per 100,000 resident population`,2), name = "Female",
+            line = list(width = 4, dash = "dash")) %>% 
+  add_trace(data = filter(rates, sex == "Male"),
+            y = ~round(`Death rate per 100,000 resident population`,2), name = "Male",
+            line = list(width = 4, dash = "dash"))
+)
+
+saveWidget(partial_bundle(figure1), "Figures/HTML-figures/figure1.html", selfcontained = F, libdir = "index_files")
+```
+
+
+```{r}
+# Figure 2
+map_colours <- c("#FFFFFF", "#FEB627")
+pal <- colorRampPalette(map_colours)
+colourscale <- pal(100)
+
+map_df_json <- fromJSON(file = "gov_regions/SAGovtRegions_GDA2020.json")
+rates_metro <- filter(rates_regions, region %in% c("Barossa, Light and Lower North", "Northern Adelaide", "Eastern Adelaide", 
+                                                   "Western Adelaide", "Adelaide Hills", "Southern Adelaide"))
+
+(figure2 <- plot_ly() %>% 
+  add_trace(type="choroplethmapbox",
+            geojson=map_df_json,
+            locations=rates_metro$region,
+            z=round(rates_metro$rate,2),
+            colors=colourscale,
+            zmax=32,
+            zmin=18,
+            featureidkey="properties.region",
+            marker=list(opacity=0.75),
+            text=rates_metro$region,
+            hovertemplate=paste0("Death rate: %{z} \n",
+                                 "Number of deaths: ",
+                                 rates_metro$n,
+                                 "<extra>%{text}</extra>")) %>% 
+  colorbar(title = "Death rate\nper 100,000\nresident\npopulation\n \n ",
+           x=1, y=1,
+           len=1) %>% 
+  layout(mapbox=list(style="carto-positron",
+                     zoom=7.5,
+                     center=list(lon=138.5, lat=-34.75))))
+
+saveWidget(figure2, "Figures/HTML-figures/figure2.html", selfcontained = F, libdir = "index_files")
+```
+
+```{r}
+rates_regional <- filter(rates_regions, !region %in% c("Barossa, Light and Lower North", "Northern Adelaide", "Eastern Adelaide", 
+                                                   "Western Adelaide", "Adelaide Hills", "Southern Adelaide"))
+
+(figure3 <- plot_ly() %>% 
+  add_trace(type="choroplethmapbox",
+            geojson=map_df_json,
+            locations=rates_regions$region,
+            z=round(rates_regions$rate,2),
+            colors=colourscale,
+            zmax=94,
+            zmin=18,
+            featureidkey="properties.region",
+            marker=list(opacity=0.75),
+            text=rates_regions$region,
+            hovertemplate=paste0("Death rate: %{z} \n",
+                                 "Number of deaths: ",
+                                 rates_regions$n,
+                                 "<extra>%{text}</extra>")) %>% 
+  colorbar(title = "Death rate\nper 100,000\nresident\npopulation\n ",
+           x=1, y=1,
+           len=1) %>% 
+  layout(mapbox=list(style="carto-positron",
+                     zoom=4.3,
+                     center=list(lon=135, lat=-32))))
+
+saveWidget(figure3, "Figures/HTML-figures/figure3.html", selfcontained = F, libdir = "index_files")
+```
+
+
+```{r}
+(figure4 <- plot_ly(data = rates_disadvantage,
+                    type = "bar",
+                    color = ~as.factor(`Relative Socio-Economic Disadvantage Quintile`),
+                    colors = seifa_colours,
+                    x = ~as.factor(`Relative Socio-Economic Disadvantage Quintile`), 
+                    y = ~round(`Death rate per 100,000 resident population`,2),
+                    hovertemplate = paste0("Death rate: ", "%{y}\n",
+                                           "Number of deaths: ", rates_disadvantage$Deaths)) %>% 
+  layout(xaxis = list(title = "Index of Relative Socio-Economic Disadvantage",
+                      ticktext = list("1\n(most disadvantaged)", "2", "3", "4", "5\n(least disadvantaged)"),
+                      tickvals = list(1,2,3,4,5)),
+         yaxis = list(title = "Death rate per 100,000 \n resident population"),
+         font = list(size = 14),
+         showlegend = FALSE))
+
+saveWidget(partial_bundle(figure4), "Figures/HTML-figures/figure4.html", selfcontained = F, libdir = "index_files")
+```
+
+
+```{r}
+line_colours <- setNames(custom_colours[c(2, 4)],
+                         c("Aboriginal", "Other"))
+
+(figure5 <- plot_ly(data = filter(rates_atsi, cultural_background %in% c("Aboriginal", "Other")),
+                    type = "scatter",
+                    mode = "lines",
+                    color = ~cultural_background,
+                    colors = line_colours,
+                    x = ~year,
+                    y = ~round(`Death rate per 100,000 resident population`,2),
+                    text = ~n,
+                    hovertemplate = paste0("Number of deaths: %{text}\n",
+                                           "Death rate: %{y}"),
+                    line = list(width = 4)) %>% 
+  layout(xaxis = list(title = "Year",
+                      tickvals = list(2005,2007,2009,2011,2013,2015,2017,2019,2021),
+                      range = c(2004, 2022)),
+         yaxis = list(title = "Death rate per 100,000 \n resident population"),
+         font = list(size = 14),
+         legend = list(x = 0.79, y = 0.92, bgcolor = "rgba(0, 0, 0, 0)")))
+
+saveWidget(partial_bundle(figure5), "Figures/HTML-figures/figure5.html", selfcontained = F, libdir = "index_files")
+```
+

@@ -1,0 +1,432 @@
+---
+title: "2020-21 Annual Report"
+output: html_notebook
+---
+This notebook is used to generate statistics and static graphs for the Annual Report. 
+See the 2021-22_AnnualReport_InteractiveFigures.Rmd notebook for HTML figures.
+---
+
+Load packages
+```{r message=FASLE}
+library(tidyverse)
+library(hablar)
+library(rgdal)
+library(sf)
+library(zeallot)
+library(ggalt)
+```
+
+Import population data
+```{r message=FALSE}
+yearly_denominators <- read_csv("yearly_denominators.csv")
+postcode_denominators <- read_csv("postcode_denominators_SRA.csv") %>% 
+   mutate(Postcode = as.character(postcode))
+age_denominators <- read_csv("my_denominators.csv")
+```
+
+
+Import data
+```{r message=FALSE, warning=FALSE}
+#import data using the import_data.R file
+
+data <- data %>% 
+  convert(fct(case_number, sex, age_group, cultural_background, category_of_death, state, residential_status)) %>% 
+  mutate(age_group = fct_relevel(age_group, "< 28 days", "1 to 11 months", "1 to 4 years", "5 to 9 years", "10 to 14 years", "15 to 17 years")) %>% rename(year = year_of_death)
+```
+
+
+Analyses and figures by section
+---
+1. Child Deaths South Australia 2005–2021
+  1.2.	Rates and patterns of death
+```{r}
+rates <- data %>%
+  #filter(sex %in% c("Male","Female")) %>% 
+  count(year, sex) %>% # Numerator
+  mutate(type = 2) %>% 
+  bind_rows(data %>%
+              count(year) %>%
+              mutate(sex = "Total",
+                     type = 1)) %>% # Total numerator
+  left_join(yearly_denominators %>%
+              group_by(year, sex) %>%
+              summarise_at(c("adjusted_population"), sum) %>%
+              ungroup() %>%
+              bind_rows(yearly_denominators %>%
+                          group_by(year) %>%
+                          summarise_at(c("adjusted_population"), sum) %>%
+                          ungroup() %>%
+                          mutate(sex = "Total")), # Total denominator
+            by = c("year", "sex")) %>% 
+  mutate(rate = (n/adjusted_population)*100000,
+         type = as.factor(type)) %>%
+  rename("Death rate per 100,000 resident population" = rate)
+
+# Data table 1
+write_csv(rates %>%
+            rename(Deaths = n, Year = year, Sex = sex,
+                   "Estimated resident population" = adjusted_population) %>%
+            select(-c(type)),
+          "Tables/Data_table_1.csv")
+
+paste("In 2021, the number of deaths of children and young people was", filter(rates, year == 2021 & sex == "Total")$n)
+```
+  
+```{r}
+paste("During this 17 year period, the average yearly population of children and young people aged 0 to 17 was", 
+      round(mean(filter(rates, sex == "Total")$adjusted_population),0))
+```
+  
+  Figure 1
+```{r}
+custom_colours <- c("#000000", "#FEB627", "#7E7E7E", "#27B9FE", "#FFFFFF")
+
+(fig_one <- ggplot(data = rates, 
+                   aes(x = year, y = `Death rate per 100,000 resident population`, 
+                       colour = sex, linetype = type)) + 
+  geom_line(size = 2.5) + 
+  scale_colour_manual(values = custom_colours[c(2, 4, 3)]) + 
+  theme_minimal() + 
+  guides(linetype = "none") + 
+  labs(y = "Death rate per 100,000 resident population", x = "Year") + 
+  theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)),
+        legend.position = c(0.793,0.878),
+        legend.title = element_blank()) +
+  coord_cartesian(ylim = c(19, 45)) + 
+  scale_x_continuous(breaks = seq(2005, 2021, by = 2),
+                     minor_breaks = seq(2005, 2021, 1)) +
+  scale_y_continuous(breaks = seq(20, 50, by = 5)) + 
+  theme(text = element_text(size = 14)) 
+)
+
+ggsave(plot = fig_one,
+       path = "Figures",
+       filename = "Figure 1 Death rate by year of death and sex for all children.tiff",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "tiff",
+       dpi = 320)
+
+ggsave(plot = fig_one,
+       path = "Figures",
+       filename = "figure1.png",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "png",
+       dpi = 320)
+```
+
+ 
+  1.2.1. Death rates by region
+```{r message=FALSE, echo=FALSE}
+# Deaths rates by region - load and transform data
+# Read in shapefiles
+#shp_df <- st_read("gov_regions\\SAGovtRegions_GDA94.shp") # Gov regions shapefile
+shp_df <- readOGR(dsn = "gov_regions", layer = "SAGovtRegions_GDA2020")
+
+# add column of row names to data object
+shp_df@data$id <- rownames(shp_df@data)
+# create dataframe from spatial object
+regions_points <- fortify(shp_df, region = "id")
+# merge the fortified data with the spatial data
+regions_df <- merge(regions_points, shp_df@data, by = "id")
+
+aus_shp <- readOGR(dsn = "shapes", layer = "aust_cd66states") # Australia shapefile
+
+sa_shp <- subset(aus_shp, STE == 4) # Extract SA shape
+
+numerator_region <- data %>%
+  filter(!is.na(region)) %>% 
+  count(region)
+
+denominator_region <- postcode_denominators %>%
+  filter(!is.na(region)) %>%
+  group_by(region) %>%
+  summarise_at("adjusted_population", sum) %>%
+  ungroup()
+
+rates_regions <- numerator_region %>%
+  left_join(denominator_region, by = "region") %>%
+  mutate(rate = (n/adjusted_population)*100000) 
+
+#Data table 2
+write_csv(rates_regions %>%
+            rename("Number of deaths" = n,
+                   "Estimated resident population (sum)" = adjusted_population,
+                   "Death rate per 100,000 resident population" = rate) %>%
+            select(-c(region)),
+          "Tables/Data_table_2.csv")
+
+map_df <- rates_regions %>% 
+  left_join(regions_df, by = "region") %>%
+  rename("Rate per 100,000\nresident population" = rate)
+
+centre_names <- aggregate(data = map_df, cbind(long, lat) ~ region, FUN = mean) 
+centre_names[8, 2] <- 139.7413
+centre_names[8, 3] <- -34.8774
+centre_names[6, 2] <- 137.2142
+centre_names[6, 3] <- -35.7752
+centre_names[3, 2] <- 138.79
+centre_names[3, 3] <- -34.9
+centre_names[11, 2] <- 138.4
+```
+
+Plot death rates by region - Metropolitan
+```{r}
+centre_names[11, 3] <- -34.85
+centre_names[2, 3] <- -34.5
+centre_names[10, 2] <- 138.465
+
+(fig_two <- ggplot() + 
+  geom_polygon(data = filter(map_df, region %in% c("Barossa, Light and Lower North", "Northern Adelaide", "Eastern Adelaide", 
+                                                   "Western Adelaide", "Adelaide Hills", "Southern Adelaide")), 
+               aes(x = long, y = lat, group = region, fill = `Rate per 100,000\nresident population`), colour = "white") +
+   scale_fill_gradient(limits= c(15.1, 35), low = custom_colours[5], high = custom_colours[2]) + 
+  geom_text(data = filter(centre_names, region %in% c("Barossa, Light and Lower North", "Northern Adelaide", 
+                                                  "Eastern Adelaide", "Western Adelaide", "Adelaide Hills", "Southern Adelaide")), 
+            aes(x = long, y = lat, label = region), size = 5) + theme_void() + 
+  geom_polygon(data = sa_shp, aes(x = long, y = lat, group = group), colour = "black", fill = NA) + 
+  coord_map(xlim = c(138, 139.2), ylim = c(-35.4, -34.1)) +
+  theme(text = element_text(size = 14))
+)
+
+ggsave(plot = fig_two,
+       path = "Figures",
+       "Figure 2 Death rate by region of metropolitan South Australia for children who were usual residents.tiff",
+       width = 19.5,
+       height = 16,
+       units = "cm",
+       device = "tiff",
+       dpi = 320)
+
+ggsave(plot = fig_two,
+       path = "Figures",
+       "figure2.png",
+       width = 19.5,
+       height = 16,
+       units = "cm",
+       device = "png",
+       dpi = 320)
+```
+
+Plot death rates by region - Non-metropolitan
+```{r}
+(fig_three <- ggplot() + 
+  geom_polygon(data = filter(map_df, !region %in% c("Barossa, Light and Lower North", "Northern Adelaide", "Eastern Adelaide", 
+                                                   "Western Adelaide", "Adelaide Hills", "Southern Adelaide")), 
+               aes(x = long, y = lat, group = region, fill = `Rate per 100,000\nresident population`), colour = "white") +
+   scale_fill_gradient(limits= c(20, 99), low = custom_colours[5], high = custom_colours[2]) + 
+  geom_text(data = filter(centre_names, !region %in% c("Barossa, Light and Lower North", "Northern Adelaide", 
+                                                  "Eastern Adelaide", "Western Adelaide", "Adelaide Hills", "Southern Adelaide")), 
+            aes(x = long, y = lat, label = region), size = 5) + theme_void() + 
+  geom_polygon(data = sa_shp, aes(x = long, y = lat, group = group), colour = "black", fill = NA) + 
+  coord_map(xlim = c(128, 142), ylim = c(-25.2, -39)) +
+  theme(text = element_text(size = 14))
+)
+
+ggsave(plot = fig_three,
+       path = "Figures",
+       "Figure 3 Death rate by region of non-metropolitan South Australia for children who were usual residents.tiff",
+       width = 19.5,
+       height = 16,
+       units = "cm",
+       device = "tiff",
+       dpi = 320)
+
+ggsave(plot = fig_three,
+       path = "Figures",
+       "figure3.png",
+       width = 19.5,
+       height = 16,
+       units = "cm",
+       device = "png",
+       dpi = 320)
+```
+
+
+
+  1.2.3.	Death rates and socioeconomic disadvantage
+Death rate by SEIFA quintile - disadvantage
+```{r}
+numerator_disadvantage <- data %>%
+  #filter(!is.na(seifa_disadvantage)) %>% 
+  count(year, seifa_disadvantage)
+
+denominator_disadvantage <- postcode_denominators %>%
+  group_by(year, seifa_disadvantage) %>%
+  summarise_at(c("adjusted_population"), sum) %>%
+  ungroup()
+
+rates_disadvantage <- numerator_disadvantage %>%
+  left_join(denominator_disadvantage, by = c("year", "seifa_disadvantage")) %>%
+  mutate(rate = (n/adjusted_population)*100000) %>%
+  group_by(seifa_disadvantage) %>%
+  summarise(rate = mean(rate), Deaths = sum(n)) %>%
+  rename("Death rate per 100,000 resident population" = rate, "Relative Socio-Economic Disadvantage Quintile" = seifa_disadvantage) %>%
+  head(-1)
+
+#Data table 3
+write_csv(rates_disadvantage, "Tables/Data_table_3.csv")
+```
+
+```{r}
+cbPalette <- c("#999999", "#56B4E9", "#E69F00", "#0072B2", "#CC79A7")
+seifa_colours <- c("#FEB627", "#27B9FE", "mediumseagreen", "sienna2", "slateblue2")
+
+(fig_four <- ggplot(data = rates_disadvantage, 
+                   aes(x = as.factor(`Relative Socio-Economic Disadvantage Quintile`), 
+                       y = `Death rate per 100,000 resident population`,
+                       fill = as.factor(`Relative Socio-Economic Disadvantage Quintile`))) + 
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  labs(x = "Index of Relative Socio-Economic Disadvantage") +
+  scale_fill_manual(values = seifa_colours) +
+  coord_cartesian(ylim = c(0, 39)) + 
+  scale_y_continuous(breaks = seq(0, 50, by = 10)) +
+  scale_x_discrete(labels=c("1\n(most disadvantaged)", 2, 3, 4, "5\n(least disadvantaged)")) +
+  theme_minimal() + 
+  theme(text = element_text(size = 14),
+        axis.title.x = element_text(vjust=-0.5))
+)
+
+ggsave(plot = fig_four,
+       path = "Figures",
+       filename = "Figure 4 Death rate by Relative Socio-Economic Disadvantage Quintile.tiff",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "tiff",
+       dpi = 320)
+
+ggsave(plot = fig_four,
+       path = "Figures",
+       filename = "figure4.png",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "png",
+       dpi = 320)
+```
+
+
+1.5.	Deaths of Aboriginal children and young people
+```{r}
+rates_atsi <- data %>%
+  count(year, cultural_background) %>% # Numerator
+  bind_rows(data %>%
+            count(year) %>%
+            mutate(cultural_background = "Total")) %>% # Total numerator
+  left_join(yearly_denominators %>%
+            mutate(cultural_background = fct_recode(cultural_background,"Aboriginal or Torres Strait Islander"="ATSI")) %>% 
+            group_by(year, cultural_background) %>%
+            summarise_at(c("adjusted_population"), sum) %>%
+            ungroup() %>%
+            bind_rows(yearly_denominators %>%
+                      group_by(year) %>%
+                      summarise_at(c("adjusted_population"), sum) %>%
+                      ungroup() %>%
+                      mutate(cultural_background = "Total")), # Total denominator
+            by = c("year", "cultural_background")) %>% 
+  mutate(rate = (n/adjusted_population)*100000,
+         cultural_background = fct_recode(cultural_background, Aboriginal = "Aboriginal or Torres Strait Islander")) %>%
+  rename("Death rate per 100,000 resident population" = rate)
+
+#Data table 4
+write_csv(rates_atsi %>%
+            rename("Number of deaths" = n,
+                   "Estimated resident population" = adjusted_population),
+          "Tables/Data_table_4.csv")
+
+average_populations <- yearly_denominators %>% 
+  group_by(year, cultural_background) %>%
+  summarise(n = sum(adjusted_population)) %>% 
+  group_by(cultural_background) %>% 
+  summarise(population = mean(n))
+
+average_death_rates <- rates_atsi %>%
+  filter(cultural_background != "Total") %>% 
+  group_by(cultural_background) %>% 
+  summarise(mean(`Death rate per 100,000 resident population`))
+```
+
+```{r}
+paste0("During the period 2005 to 2021, Aboriginal children and young people constituted only ",
+       round(average_populations[1,"population"]/sum(average_populations$population)*100,1), "% ", 
+       "of the South Australian population of children and young people, but they accounted for ", 
+       round(nrow(filter(data, cultural_background == "Aboriginal or Torres Strait Islander"))/nrow(data)*100,1), "% of child deaths.")
+```
+```{r}
+rates_atsi_residents <- data %>%
+  filter(state == "SA") %>% 
+  count(year, cultural_background) %>% # Numerator
+  bind_rows(data %>%
+            count(year) %>%
+            mutate(cultural_background = "Total")) %>% # Total numerator
+  left_join(yearly_denominators %>%
+            mutate(cultural_background = fct_recode(cultural_background,"Aboriginal or Torres Strait Islander"="ATSI")) %>% 
+            group_by(year, cultural_background) %>%
+            summarise_at(c("adjusted_population"), sum) %>%
+            ungroup() %>%
+            bind_rows(yearly_denominators %>% # Denominator
+                      group_by(year) %>%
+                      summarise_at(c("adjusted_population"), sum) %>%
+                      ungroup() %>%
+                      mutate(cultural_background = "Total")), # Total denominator
+            by = c("year", "cultural_background")) %>% 
+  mutate(rate = (n/adjusted_population)*100000) %>% 
+  rename("Death rate per 100,000 resident population" = rate)
+
+average_death_rates_residents <- rates_atsi_residents %>%
+  filter(cultural_background != "Total") %>% 
+  group_by(cultural_background) %>% 
+  summarise(mean(`Death rate per 100,000 resident population`))
+
+paste0("The rate of death for all Aboriginal children and young people who died in South Australia was ", 
+       round(average_death_rates[1,2],1), 
+       " deaths per 100,000. For Aboriginal children and young people who were usually resident in South Australia, the death rate was ", 
+       round(average_death_rates_residents[1,2],1),
+       " deaths per 100,000 over the same period.")
+```
+```{r}
+paste0("The rate of death for non-Aboriginal children and young people was ",
+       round(average_death_rates[2,2],1), 
+       " deaths per 100,000. The rate of death for non-Aboriginal children and young people usually resident in South Australia was ",
+       round(average_death_rates_residents[2,2],1), " deaths per 100,000.")
+```
+
+Figure 5
+```{r}
+(fig_five <- ggplot(filter(rates_atsi, cultural_background %in% c("Aboriginal", "Other"))) + 
+  geom_line(aes(x = year, 
+                y = `Death rate per 100,000 resident population`, 
+                color = cultural_background), 
+            size=1.5) +
+  xlab("Year") +
+  scale_color_manual(values=c("#FEB627", "#27B9FE")) + 
+  scale_x_continuous(breaks = seq(2005, 2021, by = 2),
+                     minor_breaks = seq(2005, 2021, 1)) +
+  theme_minimal() + 
+  theme(text = element_text(size = 14),
+        legend.title = element_blank(),
+        legend.position = c(0.81, 0.93)) 
+)
+
+ggsave(plot = fig_five,
+       path = "Figures",
+       filename = "Figure 5 Death rate by cultural background, South Australia 2005-2021.tiff",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "tiff",
+       dpi = 320)
+
+ggsave(plot = fig_five,
+       path = "Figures",
+       filename = "figure5.png",
+       width = 19.5,
+       height = 13.5,
+       units = "cm",
+       device = "png",
+       dpi = 320)
+```

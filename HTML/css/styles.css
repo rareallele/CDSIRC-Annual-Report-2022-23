@@ -1,0 +1,277 @@
+hr {
+    width: 100%;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 5px;
+    color: rgb(243, 140, 4);
+    background-color: rgb(243, 140, 4);
+    border-width: 0.05em;
+}
+
+.row div hr {
+  border-top: 0.5px solid black;
+}
+
+h1, h2, h3, h4, h5 {
+    color: rgb(243, 140, 4);
+    font: arial;
+}
+
+p {
+    font: arial;
+}
+
+.figure-legend {
+  font-size: 1.1em;
+  color:rgb(34, 71, 146);
+  font: arial;
+}
+
+.center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
+}
+
+.glossary {
+  width: 80%;
+  display: flexbox;
+  margin-left: 12.5%;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+.container-fluid {
+    display: flex;
+    width: 80%;
+    align-items: stretch;
+}
+.container-test {
+  display: flexbox;
+  width: 50%;
+  align-items: stretch;
+}
+
+.row {
+    position: relative;
+    display: flex;
+    max-width: 1000px;
+    margin: auto;
+    margin-top: 20px;
+}
+.column {
+  float: left;
+}
+.left {
+  width: 30%;
+}
+.right {
+  width: 70%;
+}
+
+#tfd-links {
+  line-height: 2;
+}
+#tfd-links div {
+  padding-left: 3em;
+  text-indent:-3em;
+}
+#tfd-links a {
+  color: black;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+  
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.dropdown-btn {
+  padding: 8px 8px 6px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #818181;
+  display: block;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+.dropdown-container {
+  display: none;
+  background-color: #313131;
+  padding-left: 8px;
+}
+
+.dropdown-container a, .dropdown-container .dropdown-btn {
+  color: #b9b6b6;
+}
+
+/* Optional: Style the caret down icon */
+.fa-caret-down {
+  float: right;
+  padding-right: 8px;
+}
+
+.sidenav a:hover, .sidenav .active {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  font-size: 36px;
+}
+
+
+.footnote-container, .footnote-container p {
+line-height: 1.3;
+margin-bottom: 0;
+}
+
+.footnote {
+  color: black;
+  font-size: 0.8em;
+}
+
+.container-fluid a {
+  color: rgb(68, 67, 67);
+  font-style: italic;
+}
+
+#main {
+  transition: margin-left .5s;
+  padding: 16px;
+  line-height: 1.6;
+}
+
+th {
+  border: 1px solid rgb(34, 71, 146);
+  color: white;
+  background-color: rgb(34, 71, 146);
+  padding-right: 5px;
+  padding-left: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+}
+
+td {
+  border: 1px solid rgb(34, 71, 146);
+  color:  rgb(34, 71, 146);
+  padding-right: 5px;
+  padding-left: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+}
+
+li {
+  text-align: left;
+}
+
+.ar-table {
+  line-height: 1.2;
+  table-layout: auto;
+  margin: auto;
+  width: 100%;
+}
+.ar-table tr:nth-child(odd){
+  background-color:  white;
+  color: black;
+}
+.ar-table tr:nth-child(even){
+  background-color:  rgb(238, 245, 255);
+  color: black;
+}
+
+td {
+  text-align: left;
+}
+
+.datalink {
+  color: #313131;
+  font-size: .85em;
+}
+
+img {
+  max-width: 100%;
+  margin: auto;
+}
+
+#sidebarButton span {
+  font-size:30px; 
+  cursor:pointer; 
+  position: fixed;}
+
+/* XS screens */
+@media screen and (max-width: 500px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
+  .ar-table {font-size: 0.8em;}
+  .sidenav .dropdown-btn {font-size: 18px;}
+  .figure-legend {font-size: 1em;}
+  .row p {text-align: justify; text-justify: inter-word;}
+  .row {margin-top: 50px;}
+  #sidebarButton {
+    width: 100%; 
+    position: fixed; 
+    background-color: white; 
+    z-index: 1; 
+    margin-top: -18px;
+  }
+  #sidebarButton span {
+    font-size:30px; 
+    cursor:pointer; 
+    position: relative;
+  }
+  .container-fluid{width: 100%;}
+}
+
+/* Medium screens */
+@media screen and (min-width: 800px){
+  .iframe-holder {width: 80%;}
+}
+
+/* Default sidebar layout */
+@media screen and (max-width: 699px){
+  .sidenav {width: 0%;}
+  #main {margin-left: 0%;}
+}
+
+@media screen and (min-width: 700px){
+  .sidenav {width: 250px;}
+  #main {margin-left: 250px;}
+  #closebutton {display: none;}
+}
+
+@media screen and (min-width: 1100px){
+  .sidenav {width: 25%;}
+  #main {margin-left: 25%;}
+  #closebutton {display: none;}
+}

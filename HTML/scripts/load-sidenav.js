@@ -1,3 +1,3 @@
 $(document).ready(function(){   
-    $("#mySidenav").load("https://rareallele.github.io/CDSIRC-Annual-Report-2020-21/sidenav.html");
+    $("#mySidenav").load("https://cdsircsa.github.io/CDSIRC-Annual-Report-2021-22/HTML/sidenav.html");
 });

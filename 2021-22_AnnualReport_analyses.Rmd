@@ -76,7 +76,10 @@ paste("In 2021, the number of deaths of children and young people was", filter(r
 paste("During this 17 year period, the average yearly population of children and young people aged 0 to 17 was", 
       round(mean(filter(rates, sex == "Total")$adjusted_population),0))
 ```
-  
+```{r}
+data %>% group_by(year) %>% count()
+```
+
   Figure 1
 ```{r}
 custom_colours <- c("#000000", "#FEB627", "#7E7E7E", "#27B9FE", "#FFFFFF")
@@ -153,10 +156,11 @@ rates_regions <- numerator_region %>%
 
 #Data table 2
 write_csv(rates_regions %>%
+            mutate(adjusted_population = adjusted_population/17) %>% 
             rename("Number of deaths" = n,
-                   "Estimated resident population (sum)" = adjusted_population,
-                   "Death rate per 100,000 resident population" = rate) %>%
-            select(-c(region)),
+                   "Estimated resident population (mean)" = adjusted_population,
+                   "Death rate per 100,000 resident population" = rate,
+                   "SA Government Region" = region),
           "Tables/Data_table_2.csv")
 
 map_df <- rates_regions %>% 
@@ -268,7 +272,8 @@ rates_disadvantage <- numerator_disadvantage %>%
   head(-1)
 
 #Data table 3
-write_csv(rates_disadvantage, "Tables/Data_table_3.csv")
+write_csv(rates_disadvantage, 
+          "Tables/Data_table_3.csv")
 ```
 
 ```{r}
@@ -333,8 +338,10 @@ rates_atsi <- data %>%
   rename("Death rate per 100,000 resident population" = rate)
 
 #Data table 4
-write_csv(rates_atsi %>%
-            rename("Number of deaths" = n,
+write_csv(rates_atsi %>% 
+            rename("Year" = year,
+                   "Cultural Background" = cultural_background,
+                   "Number of deaths" = n,
                    "Estimated resident population" = adjusted_population),
           "Tables/Data_table_4.csv")
 

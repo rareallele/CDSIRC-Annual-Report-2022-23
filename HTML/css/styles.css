@@ -229,6 +229,15 @@ img {
   cursor:pointer; 
   position: fixed;}
 
+.act-box{
+  background-color: #FFF6E6;
+  border-color: #ED8108;
+  border-style: solid;
+  border-width: 1px;
+  padding: 20px;
+  margin-bottom: 60px;
+}
+
 /* XS screens */
 @media screen and (max-width: 500px) {
   .sidenav {padding-top: 15px;}
@@ -255,7 +264,7 @@ img {
 
 /* Medium screens */
 @media screen and (min-width: 800px){
-  .iframe-holder {width: 80%;}
+  .iframe-holder {width: 90%;}
 }
 
 /* Default sidebar layout */

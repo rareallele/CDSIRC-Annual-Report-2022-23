@@ -27,8 +27,9 @@ age_denominators <- read_csv("my_denominators.csv")
 
 Import data
 ```{r message=FALSE, warning=FALSE}
-#import data using the import_data.R file
+#import data using the import_data.R file - see the import_data.R file in Objective (CDSIRC BUSINESS/CDSIRC - Annual Reports/2021-2022/Code/)
 
+# convert fields to factors and reorder the age groups
 data <- data %>% 
   convert(fct(case_number, sex, age_group, cultural_background, category_of_death, state, residential_status)) %>% 
   mutate(age_group = fct_relevel(age_group, "< 28 days", "1 to 11 months", "1 to 4 years", "5 to 9 years", "10 to 14 years", "15 to 17 years")) %>% rename(year = year_of_death)
@@ -40,6 +41,7 @@ Analyses and figures by section
 1. Child Deaths South Australia 2005–2021
   1.2.	Rates and patterns of death
 ```{r}
+# calculate death rates by sex
 rates <- data %>%
   #filter(sex %in% c("Male","Female")) %>% 
   count(year, sex) %>% # Numerator
@@ -48,7 +50,7 @@ rates <- data %>%
               count(year) %>%
               mutate(sex = "Total",
                      type = 1)) %>% # Total numerator
-  left_join(yearly_denominators %>%
+  left_join(yearly_denominators %>% # join to the population data
               group_by(year, sex) %>%
               summarise_at(c("adjusted_population"), sum) %>%
               ungroup() %>%
@@ -58,7 +60,7 @@ rates <- data %>%
                           ungroup() %>%
                           mutate(sex = "Total")), # Total denominator
             by = c("year", "sex")) %>% 
-  mutate(rate = (n/adjusted_population)*100000,
+  mutate(rate = (n/adjusted_population)*100000, # calculate the rates
          type = as.factor(type)) %>%
   rename("Death rate per 100,000 resident population" = rate)
 
@@ -69,6 +71,7 @@ write_csv(rates %>%
             select(-c(type)),
           "Tables/Data_table_1.csv")
 
+# generate the sentence for the report
 paste("In 2021, the number of deaths of children and young people was", filter(rates, year == 2021 & sex == "Total")$n)
 ```
   
@@ -83,7 +86,7 @@ data %>% group_by(year) %>% count()
   Figure 1
 ```{r}
 custom_colours <- c("#000000", "#FEB627", "#7E7E7E", "#27B9FE", "#FFFFFF")
-
+# generate the static figure for the PDF report. this is performed for all the figures - the interactive ones are generated in the other notebook
 (fig_one <- ggplot(data = rates, 
                    aes(x = year, y = `Death rate per 100,000 resident population`, 
                        colour = sex, linetype = type)) + 
@@ -102,6 +105,7 @@ custom_colours <- c("#000000", "#FEB627", "#7E7E7E", "#27B9FE", "#FFFFFF")
   theme(text = element_text(size = 14)) 
 )
 
+# save the figure in both tiff and png format
 ggsave(plot = fig_one,
        path = "Figures",
        filename = "Figure 1 Death rate by year of death and sex for all children.tiff",
@@ -167,6 +171,7 @@ map_df <- rates_regions %>%
   left_join(regions_df, by = "region") %>%
   rename("Rate per 100,000\nresident population" = rate)
 
+# set the coordinates for the labels
 centre_names <- aggregate(data = map_df, cbind(long, lat) ~ region, FUN = mean) 
 centre_names[8, 2] <- 139.7413
 centre_names[8, 3] <- -34.8774
@@ -263,6 +268,7 @@ denominator_disadvantage <- postcode_denominators %>%
   summarise_at(c("adjusted_population"), sum) %>%
   ungroup()
 
+# calculate the rates
 rates_disadvantage <- numerator_disadvantage %>%
   left_join(denominator_disadvantage, by = c("year", "seifa_disadvantage")) %>%
   mutate(rate = (n/adjusted_population)*100000) %>%
@@ -317,12 +323,13 @@ ggsave(plot = fig_four,
 
 1.5.	Deaths of Aboriginal children and young people
 ```{r}
+# calculate death rates for Aboriginal and non-Aboriginal children and young people
 rates_atsi <- data %>%
   count(year, cultural_background) %>% # Numerator
   bind_rows(data %>%
             count(year) %>%
             mutate(cultural_background = "Total")) %>% # Total numerator
-  left_join(yearly_denominators %>%
+  left_join(yearly_denominators %>% # join the population data
             mutate(cultural_background = fct_recode(cultural_background,"Aboriginal or Torres Strait Islander"="ATSI")) %>% 
             group_by(year, cultural_background) %>%
             summarise_at(c("adjusted_population"), sum) %>%
@@ -345,12 +352,14 @@ write_csv(rates_atsi %>%
                    "Estimated resident population" = adjusted_population),
           "Tables/Data_table_4.csv")
 
+# calculate the average population (yearly) of children and young people over the reporting period
 average_populations <- yearly_denominators %>% 
   group_by(year, cultural_background) %>%
   summarise(n = sum(adjusted_population)) %>% 
   group_by(cultural_background) %>% 
   summarise(population = mean(n))
 
+# and the average death rate
 average_death_rates <- rates_atsi %>%
   filter(cultural_background != "Total") %>% 
   group_by(cultural_background) %>% 
@@ -364,6 +373,7 @@ paste0("During the period 2005 to 2021, Aboriginal children and young people con
        round(nrow(filter(data, cultural_background == "Aboriginal or Torres Strait Islander"))/nrow(data)*100,1), "% of child deaths.")
 ```
 ```{r}
+# do the same as above, but only including children who were normally resident in SA
 rates_atsi_residents <- data %>%
   filter(state == "SA") %>% 
   count(year, cultural_background) %>% # Numerator

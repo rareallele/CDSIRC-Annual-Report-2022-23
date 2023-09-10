@@ -29,7 +29,7 @@ line_colours <- setNames(custom_colours[c(2, 4, 3)],
                                            "Number of deaths: ","%{text}"), # control the text that appears on hover
                     line = list(width = 4)) %>% 
   layout(xaxis = list(title = "Year",
-                      tickvals = list(2005,2007,2009,2011,2013,2015,2017,2019,2021),
+                      tickvals = list(2006,2008,2010,2012,2014,2016,2018,2020,2022),
                       range = c(2004, 2022)),
          yaxis = list(title = "Death rate per 100,000 \n resident population",
                       range = c(16, 47)),
@@ -148,8 +148,8 @@ line_colours <- setNames(custom_colours[c(2, 4)],
                                            "Death rate: %{y}"),
                     line = list(width = 4)) %>% 
   layout(xaxis = list(title = "Year",
-                      tickvals = list(2005,2007,2009,2011,2013,2015,2017,2019,2021),
-                      range = c(2004, 2022)),
+                      tickvals = list(2006,2008,2010,2012,2014,2016,2018,2020,2022),
+                      range = c(2004, 2023)),
          yaxis = list(title = "Death rate per 100,000 \n resident population"),
          font = list(size = 14),
          legend = list(x = 0.79, y = 0.92, bgcolor = "rgba(0, 0, 0, 0)")))

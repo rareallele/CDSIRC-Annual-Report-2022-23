@@ -1,0 +1,91 @@
+Australian Bureau of Statistics,,,,
+,,,,
+2021 Census - cultural diversity,,,,
+"AGEP Age, SEXP Sex, STATE (UR) and INGP Indigenous Status",,,,
+Counting: Person Records,,,,
+,,,,
+Filters:,,,,
+Default Summation,Person Records,,,
+,,,,
+,,,,
+AGEP Age,SEXP Sex,STATE (UR),INGP Indigenous Status,
+0,Male,South Australia POAs,Non-Indigenous,8969
+,,,Indigenous,462
+,Female,South Australia POAs,Non-Indigenous,8552
+,,,Indigenous,391
+1,Male,South Australia POAs,Non-Indigenous,9022
+,,,Indigenous,436
+,Female,South Australia POAs,Non-Indigenous,8601
+,,,Indigenous,402
+2,Male,South Australia POAs,Non-Indigenous,9069
+,,,Indigenous,445
+,Female,South Australia POAs,Non-Indigenous,8721
+,,,Indigenous,415
+3,Male,South Australia POAs,Non-Indigenous,9394
+,,,Indigenous,463
+,Female,South Australia POAs,Non-Indigenous,8766
+,,,Indigenous,419
+4,Male,South Australia POAs,Non-Indigenous,9466
+,,,Indigenous,455
+,Female,South Australia POAs,Non-Indigenous,9002
+,,,Indigenous,434
+5,Male,South Australia POAs,Non-Indigenous,9957
+,,,Indigenous,450
+,Female,South Australia POAs,Non-Indigenous,9505
+,,,Indigenous,441
+6,Male,South Australia POAs,Non-Indigenous,9918
+,,,Indigenous,474
+,Female,South Australia POAs,Non-Indigenous,9435
+,,,Indigenous,391
+7,Male,South Australia POAs,Non-Indigenous,10207
+,,,Indigenous,459
+,Female,South Australia POAs,Non-Indigenous,9600
+,,,Indigenous,445
+8,Male,South Australia POAs,Non-Indigenous,10309
+,,,Indigenous,435
+,Female,South Australia POAs,Non-Indigenous,9698
+,,,Indigenous,458
+9,Male,South Australia POAs,Non-Indigenous,10463
+,,,Indigenous,455
+,Female,South Australia POAs,Non-Indigenous,9887
+,,,Indigenous,422
+10,Male,South Australia POAs,Non-Indigenous,10156
+,,,Indigenous,451
+,Female,South Australia POAs,Non-Indigenous,9629
+,,,Indigenous,440
+11,Male,South Australia POAs,Non-Indigenous,10505
+,,,Indigenous,456
+,Female,South Australia POAs,Non-Indigenous,9610
+,,,Indigenous,482
+12,Male,South Australia POAs,Non-Indigenous,10300
+,,,Indigenous,478
+,Female,South Australia POAs,Non-Indigenous,9808
+,,,Indigenous,440
+13,Male,South Australia POAs,Non-Indigenous,10253
+,,,Indigenous,480
+,Female,South Australia POAs,Non-Indigenous,9941
+,,,Indigenous,458
+15,Male,South Australia POAs,Non-Indigenous,10083
+,,,Indigenous,459
+,Female,South Australia POAs,Non-Indigenous,9359
+,,,Indigenous,407
+16,Male,South Australia POAs,Non-Indigenous,9677
+,,,Indigenous,395
+,Female,South Australia POAs,Non-Indigenous,9183
+,,,Indigenous,398
+14,Male,South Australia POAs,Non-Indigenous,10272
+,,,Indigenous,446
+,Female,South Australia POAs,Non-Indigenous,9870
+,,,Indigenous,408
+17,Male,South Australia POAs,Non-Indigenous,9875
+,,,Indigenous,382
+,Female,South Australia POAs,Non-Indigenous,9142
+,,,Indigenous,358
+,,,,
+"Dataset: Census of Population and Housing, 2021, TableBuilder",,,,
+,,,,
+INFO,Cells in this table have been randomly adjusted to avoid the release of confidential data. No reliance should be placed on small cells.,,,
+,,,,
+,,,,
+"Copyright Commonwealth of Australia, 2021, see abs.gov.au/copyright",,,,
+"ABS data licensed under Creative Commons, see abs.gov.au/ccby",,,,
